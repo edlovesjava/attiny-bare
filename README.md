@@ -54,7 +54,8 @@ attiny-bare/
 │   ├── tutorial-arduino-nano-isp.md
 │   ├── tutorial-understanding-the-makefile.md
 │   ├── tutorial-delay-to-interrupts.md
-│   └── glossary.md
+│   ├── glossary.md
+│   └── references.md
 └── README.md
 ```
 
@@ -77,6 +78,7 @@ attiny-bare/
 - [Understanding the Makefile](docs/tutorial-understanding-the-makefile.md) — the build pipeline, compiler flags, and Make mechanics
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
 - [Glossary](docs/glossary.md) — definitions for all acronyms, registers, and technical terms
+- [References & Resources](docs/references.md) — datasheets, tools, suppliers, and community links
 
 ## Wiring
 

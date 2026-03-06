@@ -53,7 +53,8 @@ attiny-bare/
 │   ├── tutorial-toolchain-setup.md
 │   ├── tutorial-arduino-nano-isp.md
 │   ├── tutorial-understanding-the-makefile.md
-│   └── tutorial-delay-to-interrupts.md
+│   ├── tutorial-delay-to-interrupts.md
+│   └── glossary.md
 └── README.md
 ```
 
@@ -75,6 +76,7 @@ attiny-bare/
 - [Arduino Nano as ISP Programmer](docs/tutorial-arduino-nano-isp.md) — wiring, configuration, and troubleshooting
 - [Understanding the Makefile](docs/tutorial-understanding-the-makefile.md) — the build pipeline, compiler flags, and Make mechanics
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
+- [Glossary](docs/glossary.md) — definitions for all acronyms, registers, and technical terms
 
 ## Wiring
 

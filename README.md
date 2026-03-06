@@ -2,6 +2,19 @@
 
 Bare-metal AVR programming on the ATtiny85 using C and inline assembly. No Arduino framework — just registers, timers, and interrupts.
 
+## Why Bare Metal?
+
+The Arduino IDE is great for getting started, but it hides everything — the build pipeline, the register-level hardware control, the linker, the fuses. You upload a sketch and it works (usually), but you don't know *why* it works.
+
+Going bare metal means:
+
+- **You understand every byte.** There's no hidden framework, no bloated core library. A blink program compiles to 204 bytes. You can read the disassembly and trace every instruction.
+- **You control the hardware directly.** Registers, timers, interrupts, sleep modes — you configure them yourself instead of calling abstraction layers that may not do what you expect.
+- **You learn skills that transfer.** The concepts here — cross-compilation, linker scripts, ISP programming, fuse configuration — apply to any embedded platform: STM32, ESP32, PIC, or custom ASICs. The Arduino API doesn't travel with you.
+- **You can debug anything.** When something breaks, you have the tools and knowledge to investigate: read the disassembly, check the fuses, verify the compiler flags, inspect the ELF sections. No black boxes.
+
+This project is a learning path — start with a blinking LED and build up to real applications, understanding every layer along the way.
+
 ## Hardware
 
 - **MCU**: ATtiny85 @ 8MHz internal oscillator
@@ -39,6 +52,7 @@ attiny-bare/
 │   │   └── 2026-02-28-blink-design.md
 │   ├── tutorial-toolchain-setup.md
 │   ├── tutorial-arduino-nano-isp.md
+│   ├── tutorial-understanding-the-makefile.md
 │   └── tutorial-delay-to-interrupts.md
 └── README.md
 ```
@@ -59,6 +73,7 @@ attiny-bare/
 
 - [Toolchain Setup](docs/tutorial-toolchain-setup.md) — installing AVR-GCC, avrdude, and Make on Windows
 - [Arduino Nano as ISP Programmer](docs/tutorial-arduino-nano-isp.md) — wiring, configuration, and troubleshooting
+- [Understanding the Makefile](docs/tutorial-understanding-the-makefile.md) — the build pipeline, compiler flags, and Make mechanics
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
 
 ## Wiring

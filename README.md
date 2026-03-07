@@ -55,7 +55,8 @@ attiny-bare/
 │   ├── tutorial-understanding-the-makefile.md
 │   ├── tutorial-delay-to-interrupts.md
 │   ├── glossary.md
-│   └── references.md
+│   ├── references.md
+│   └── using-claude-code.md
 └── README.md
 ```
 
@@ -79,6 +80,7 @@ attiny-bare/
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
 - [Glossary](docs/glossary.md) — definitions for all acronyms, registers, and technical terms
 - [References & Resources](docs/references.md) — datasheets, tools, suppliers, and community links
+- [Using Claude Code](docs/using-claude-code.md) — getting started with AI-assisted bare-metal development
 
 ## Wiring
 

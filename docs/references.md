@@ -2,6 +2,70 @@
 
 Datasheets, tools, suppliers, and community resources for ATtiny85 bare-metal development.
 
+## Bill of Materials (BOM)
+
+### Complete BOM — All Tutorials
+
+Everything you need to complete the entire tutorial series. If you want to buy once and be set, get this list.
+
+| Qty | Part | Notes |
+|-----|------|-------|
+| 1 | ATtiny85-20PU (DIP-8) | The microcontroller |
+| 1 | Arduino Nano (or clone) | ISP programmer — CH340 clones work fine |
+| 1 | USB cable for Nano | Type-A to Mini-B (most Nanos) |
+| 1 | Breadboard (half or full size) | Prototyping platform |
+| ~10 | Jumper wires (male-to-male) | Breadboard connections |
+| 2 | LEDs (any standard 3mm or 5mm) | Blink LED + button indicator LED |
+| 2 | 220 ohm resistors | Current limiters for LEDs |
+| 1 | 10uF electrolytic capacitor | Nano auto-reset disable |
+| 1 | Momentary pushbutton | Tactile switch, breadboard-friendly |
+| 1 | SSD1306 OLED display (128x64, I2C) | 0.96" most common; 128x32 also works |
+| 1 | BME280 breakout board (I2C) | Temperature, humidity, pressure sensor |
+
+Total cost: ~$15–25 depending on sourcing (less with AliExpress, more with Adafruit/SparkFun).
+
+### BOM by Tutorial Stage
+
+Buy only what you need for the stage you're starting. Each stage adds to the previous.
+
+**v1–v2: Blink (busy-wait and interrupts)**
+
+| Qty | Part |
+|-----|------|
+| 1 | ATtiny85-20PU |
+| 1 | Arduino Nano + USB cable |
+| 1 | Breadboard |
+| ~6 | Jumper wires |
+| 1 | LED |
+| 1 | 220 ohm resistor |
+| 1 | 10uF electrolytic capacitor |
+
+**v3: Button + second LED** — add:
+
+| Qty | Part |
+|-----|------|
+| 1 | Momentary pushbutton |
+| 1 | LED (second) |
+| 1 | 220 ohm resistor (second) |
+
+**v4: I2C driver** — no new hardware (reuses existing components, pin reassignment only)
+
+**v5: OLED display** — add:
+
+| Qty | Part |
+|-----|------|
+| 1 | SSD1306 OLED display module (I2C, 128x64) |
+
+Most modules come with header pins. Solder them on or use a module with pre-soldered headers.
+
+**v6: BME280 sensor** — add:
+
+| Qty | Part |
+|-----|------|
+| 1 | BME280 breakout board (I2C) |
+
+Use a breakout board (Adafruit, SparkFun, or generic) — not the bare sensor. The raw BME280 is a tiny BGA package that can't be breadboarded.
+
 ## Datasheets & Technical Documentation
 
 | Resource | Description |

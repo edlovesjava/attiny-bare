@@ -1,5 +1,17 @@
 # Bit Manipulation: Setting and Clearing Bits on AVR
 
+## Prerequisites
+
+This tutorial assumes you know what bits, bytes, and registers are. If any of these concepts are new, these resources will get you up to speed:
+
+- [Bits, Bytes, and Binary — Sparkfun](https://learn.sparkfun.com/tutorials/binary) — what bits and bytes are, how binary and hexadecimal notation work
+- [Bitwise Operators in C — GeeksforGeeks](https://www.geeksforgeeks.org/bitwise-operators-in-c-cpp/) — AND, OR, NOT, XOR, and shift operators with examples
+- [What is a Microcontroller? — Sparkfun](https://learn.sparkfun.com/tutorials/what-is-a-microcontroller) — the difference between an MCU and a general-purpose CPU, and what registers, flash, and RAM mean on a chip
+
+See also the [Glossary](glossary.md) for quick definitions of terms used throughout.
+
+---
+
 Every register on the ATtiny85 is 8 bits wide. Each bit controls something — a pin direction, an output voltage, a timer setting. To change one bit without disturbing the others, you need three tools: a **shift** to create a mask, **OR** to set a bit, and **AND-NOT** to clear a bit.
 
 This tutorial walks through exactly what happens, bit by bit, when you write:

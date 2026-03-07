@@ -2,12 +2,38 @@
 
 Quick reference for terms, acronyms, and register names used throughout the tutorials.
 
+## Fundamentals
+
+| Term | Definition |
+|------|-----------|
+| **Bit** | The smallest unit of data — a single 0 or 1. Everything in a computer is built from bits. A bit can represent on/off, true/false, high/low voltage. |
+| **Byte** | 8 bits grouped together. Can represent values from 0 to 255 (unsigned) or -128 to 127 (signed). Every register on the ATtiny85 is one byte wide. |
+| **Binary** | A number system using only 0 and 1. Written with the `0b` prefix in C: `0b00001000` = 8 in decimal. Each digit is one bit. |
+| **Hexadecimal** | A base-16 number system using 0–9 and A–F. Written with the `0x` prefix: `0xFF` = 255, `0xE2` = 226. Each hex digit represents 4 bits — a compact way to write binary values. |
+| **Register** | A small, fixed-size memory location inside the MCU that controls hardware behavior. Writing to a register changes how a pin, timer, or peripheral operates. Reading a register tells you the current state. |
+| **CPU** | Central Processing Unit — the part of the chip that executes instructions. On the ATtiny85, the CPU is 8-bit (processes one byte at a time) and runs at up to 8MHz. |
+| **MPU** | Microprocessor Unit — a CPU that requires external memory and peripherals (like a desktop processor). Contrast with MCU, which has everything on one chip. |
+| **MCU** | Microcontroller Unit — a small computer on a single chip with CPU, memory (flash + RAM), and I/O peripherals (timers, pins, ADC). The ATtiny85 is an MCU. |
+| **GPIO** | General Purpose Input/Output — pins on the MCU that you can configure as either inputs (read voltage) or outputs (drive voltage). On the ATtiny85, PB0–PB5 are GPIO pins. |
+
+## Bitwise Operators
+
+| Operator | Name | C Syntax | What It Does |
+|----------|------|----------|-------------|
+| **AND** | Bitwise AND | `a & b` | Result is 1 only where *both* bits are 1. Used to test or clear bits. |
+| **OR** | Bitwise OR | `a \| b` | Result is 1 where *either* bit is 1. Used to set bits. |
+| **NOT** | Bitwise NOT | `~a` | Flips every bit — 0 becomes 1, 1 becomes 0. Used to create inverted masks. |
+| **XOR** | Bitwise XOR | `a ^ b` | Result is 1 where bits *differ*. Used to toggle bits. |
+| **Left shift** | Shift left | `a << n` | Moves all bits left by n positions, filling with 0. `1 << 3` = `0b00001000`. |
+| **Right shift** | Shift right | `a >> n` | Moves all bits right by n positions. Used to extract or inspect bits. |
+
+See [Bit Manipulation Tutorial](tutorial-bit-manipulation.md) for step-by-step examples of how these operators work with AVR registers.
+
 ## General
 
 | Term | Definition |
 |------|-----------|
 | **AVR** | A family of 8-bit microcontrollers designed by Atmel (now Microchip). The ATtiny85 is an AVR chip. |
-| **MCU** | Microcontroller Unit — a small computer on a single chip with CPU, memory, and I/O peripherals. |
 | **Bare metal** | Programming directly on the hardware without an operating system or framework like Arduino. You control registers and interrupts yourself. |
 | **Toolchain** | The set of programs used to build software — compiler, linker, and related tools. Our toolchain is AVR-GCC + avrdude + Make. |
 | **Cross-compilation** | Compiling code on one platform (your PC) to run on a different platform (the ATtiny85). The compiled code can't run on your PC — it contains AVR instructions, not x86. |

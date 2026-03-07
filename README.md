@@ -80,6 +80,7 @@ attiny-bare/
 - [Bit Manipulation](docs/tutorial-bit-manipulation.md) — setting, clearing, and testing bits in AVR registers
 - [Understanding the Makefile](docs/tutorial-understanding-the-makefile.md) — the build pipeline, compiler flags, and Make mechanics
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
+- [USI I2C Driver](docs/tutorial-04-i2c-driver.md) — building an I2C master with the USI peripheral (interactive)
 - [Glossary](docs/glossary.md) — definitions for all acronyms, registers, and technical terms
 - [References & Resources](docs/references.md) — datasheets, tools, suppliers, and community links
 - [Using Claude Code](docs/using-claude-code.md) — getting started with AI-assisted bare-metal development

@@ -22,9 +22,42 @@ PORTB |= (1 << PB3);   // set PB3 HIGH
 PORTB &= ~(1 << PB3);  // set PB3 LOW
 ```
 
-## The Register: 8 Bits, 8 Controls
+## The Three Port Registers: DDRB, PORTB, and PINB
 
-DDRB (Data Direction Register B) has one bit per pin. Each bit controls whether that pin is **input** (0) or **output** (1):
+The ATtiny85 has one I/O port — Port B — with six pins (PB0–PB5). Three registers work together to control these pins:
+
+| Register | Purpose | Read/Write |
+|----------|---------|-----------|
+| **DDRB** | **Data Direction** — sets each pin as input or output | Read/Write |
+| **PORTB** | **Data Output** — sets the voltage on output pins (HIGH or LOW). On input pins, enables the internal pull-up resistor. | Read/Write |
+| **PINB** | **Pin Input** — reads the actual voltage level on each pin right now | Read-only |
+
+Think of it this way: **DDRB** decides *what* each pin does (listen or drive). **PORTB** decides *what to say* on output pins. **PINB** tells you *what you're hearing* on input pins.
+
+The relationship between them:
+
+```
+                      DDRB bit = 0 (input)        DDRB bit = 1 (output)
+                    ┌─────────────────────┐     ┌──────────────────────┐
+  PORTB bit = 0     │ Floating input       │     │ Pin drives LOW (0V)  │
+  PORTB bit = 1     │ Pull-up enabled      │     │ Pin drives HIGH (5V) │
+                    └─────────────────────┘     └──────────────────────┘
+  PINB bit          │ Reads actual voltage │     │ Reads actual voltage │
+```
+
+In our blink program, we use all three roles:
+- `DDRB |= (1 << PB3)` — PB3 is an **output** (drives the LED)
+- `PORTB |= (1 << PB3)` — PB3 drives **HIGH** (LED on)
+- `PORTB &= ~(1 << PB3)` — PB3 drives **LOW** (LED off)
+
+In the button program, we also use the input side:
+- `DDRB &= ~(1 << PB0)` — PB0 is an **input** (reads the button)
+- `PORTB |= (1 << PB0)` — enables the **pull-up** on PB0 (holds pin HIGH when button is open)
+- `PINB & (1 << PB0)` — **reads** PB0 (HIGH = released, LOW = pressed)
+
+## Bit Positions: 8 Bits, 8 Controls
+
+DDRB has one bit per pin. Each bit controls whether that pin is **input** (0) or **output** (1):
 
 ```
 DDRB:

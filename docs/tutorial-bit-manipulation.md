@@ -250,20 +250,32 @@ Let's say PB3 and PB0 are both HIGH:
 
 **Key insight:** ANDing with 1 leaves a bit unchanged. ANDing with 0 forces it to 0. The inverted mask has 0 only where we want to clear, and 1 everywhere else.
 
-## Step 5: Testing a Bit with `&`
+## Step 5: Reading a Pin with PINB
 
-To check if a button is pressed, you read the pin and test a specific bit:
+Our blink program only *writes* — it sets pin direction (DDRB) and drives output (PORTB). But what about *reading* a pin? That's where PINB comes in.
+
+PINB is a read-only register. Each bit reflects the actual voltage on that pin *right now* — 1 if the pin is HIGH, 0 if LOW. Unlike DDRB and PORTB (which you set and they stay), PINB changes in real time as the outside world changes.
+
+You can't read just one bit from a register — the CPU reads all 8 bits at once. To isolate the one bit you care about, you use AND with a mask. This is the same `&` operator from Step 4, but without the `~` inversion.
+
+### Example: Is the Button Pressed?
+
+In the button tutorial, we wire a button from PB0 to GND with the internal pull-up enabled. The pin reads HIGH when the button is open (pull-up holds it at 5V) and LOW when pressed (button connects it to GND).
+
+To check the button state:
 
 ```c
 if (PINB & (1 << PB0)) {
-    // PB0 is HIGH
+    // PB0 is HIGH — button is NOT pressed
+} else {
+    // PB0 is LOW — button IS pressed
 }
 ```
 
-This uses the same AND mask, but without the NOT:
+Let's trace it. Suppose PB3 is driving the LED (HIGH) and PB0 is HIGH (button released):
 
 ```
-  PINB         = 0b00001001    ← PB3 and PB0 are HIGH
+  PINB         = 0b00001001    ← PB3 HIGH (LED on), PB0 HIGH (button open)
   (1 << PB0)   = 0b00000001    ← mask for bit 0
 
   AND each bit:
@@ -271,15 +283,32 @@ This uses the same AND mask, but without the NOT:
   Bit 6:  0 & 0 = 0
   Bit 5:  0 & 0 = 0
   Bit 4:  0 & 0 = 0
-  Bit 3:  1 & 0 = 0  ← masked out
+  Bit 3:  1 & 0 = 0  ← masked out (we don't care about PB3 here)
   Bit 2:  0 & 0 = 0
   Bit 1:  0 & 0 = 0
   Bit 0:  1 & 1 = 1  ← preserved
 
-  Result       = 0b00000001    ← nonzero, so the if-condition is true
+  Result       = 0b00000001    ← nonzero → if-condition is true → button not pressed
 ```
 
-If PB0 were LOW, the result would be `0b00000000` — zero — and the if-condition would be false. The AND mask isolates just the bit you care about.
+Now the button is pressed (PB0 pulled to GND):
+
+```
+  PINB         = 0b00001000    ← PB3 HIGH (LED on), PB0 LOW (button pressed)
+  (1 << PB0)   = 0b00000001    ← same mask
+
+  AND each bit:
+  Bit 3:  1 & 0 = 0  ← masked out
+  Bit 0:  0 & 1 = 0  ← PB0 is LOW, so the AND produces 0
+
+  Result       = 0b00000000    ← zero → if-condition is false → button is pressed
+```
+
+The AND mask isolates just the bit you care about. All other pin states — whether the LED is on, whether other pins are HIGH or LOW — get masked out and don't affect the result.
+
+### Why Not Just Read PINB Directly?
+
+You might think: why not `if (PINB == 0)` to check for a button press? Because PINB contains *all* pins. If PB3 is driving the LED HIGH, PINB is never zero — even with the button pressed. The mask lets you ask about one specific pin while ignoring everything else.
 
 ## Summary: The Three Patterns
 

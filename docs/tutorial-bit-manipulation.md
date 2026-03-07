@@ -55,6 +55,41 @@ In the button program, we also use the input side:
 - `PORTB |= (1 << PB0)` — enables the **pull-up** on PB0 (holds pin HIGH when button is open)
 - `PINB & (1 << PB0)` — **reads** PB0 (HIGH = released, LOW = pressed)
 
+## Pin Names vs. Physical Pins — Don't Mix Them Up
+
+This is a common source of confusion. The ATtiny85 has two completely different numbering systems for its pins, and they don't match:
+
+- **Port bit names** (PB0–PB5) — the *logical* names used in code. PB3 means "bit 3 of Port B." These map to register bit positions: `(1 << PB3)` shifts to bit 3.
+- **Physical pin numbers** (1–8) — the *package* numbers printed on the datasheet and stamped on the chip. Pin 1 is marked with a dot on the DIP package.
+
+```
+              ┌───────┐
+        PB5   │1  o  8│   VCC          Physical pin 1 = PB5 (not PB1!)
+        PB3   │2     7│   PB2          Physical pin 2 = PB3 (not PB2!)
+        PB4   │3     6│   PB1          Physical pin 5 = PB0 (not PB5!)
+        GND   │4     5│   PB0
+              └───────┘
+```
+
+Notice: **physical pin 2 is PB3**, not PB2. **Physical pin 5 is PB0**, not PB5. There is no logical pattern — the mapping is determined by the chip's internal silicon layout, not by anything intuitive.
+
+The full mapping:
+
+| Physical Pin | Port Name | Common Use in This Project |
+|-------------|-----------|---------------------------|
+| 1 | PB5 | RESET (don't use as I/O) |
+| 2 | PB3 | Blink LED |
+| 3 | PB4 | Button LED |
+| 4 | GND | Ground (not a GPIO pin) |
+| 5 | PB0 | Button input / MOSI (ISP) |
+| 6 | PB1 | MISO (ISP) |
+| 7 | PB2 | SCK (ISP) |
+| 8 | VCC | Power (not a GPIO pin) |
+
+**The rule:** code always uses port bit names (PB0–PB5). Physical pin numbers are only for wiring. When you write `DDRB |= (1 << PB3)`, you don't need to know that PB3 is physical pin 2 — the compiler doesn't care. But when you plug a wire into the breadboard, you need the physical number.
+
+Keep the pinout diagram handy until the mapping is second nature. Getting physical pin 3 (PB4) and port bit 3 (PB3, physical pin 2) confused is one of the most common wiring mistakes.
+
 ## Bit Positions: 8 Bits, 8 Controls
 
 DDRB has one bit per pin. Each bit controls whether that pin is **input** (0) or **output** (1):

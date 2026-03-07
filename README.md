@@ -52,6 +52,7 @@ attiny-bare/
 │   │   └── 2026-02-28-blink-design.md
 │   ├── tutorial-toolchain-setup.md
 │   ├── tutorial-arduino-nano-isp.md
+│   ├── tutorial-bit-manipulation.md
 │   ├── tutorial-understanding-the-makefile.md
 │   ├── tutorial-delay-to-interrupts.md
 │   ├── glossary.md
@@ -76,6 +77,7 @@ attiny-bare/
 
 - [Toolchain Setup](docs/tutorial-toolchain-setup.md) — installing AVR-GCC, avrdude, and Make on Windows
 - [Arduino Nano as ISP Programmer](docs/tutorial-arduino-nano-isp.md) — wiring, configuration, and troubleshooting
+- [Bit Manipulation](docs/tutorial-bit-manipulation.md) — setting, clearing, and testing bits in AVR registers
 - [Understanding the Makefile](docs/tutorial-understanding-the-makefile.md) — the build pipeline, compiler flags, and Make mechanics
 - [From Delay to Interrupts](docs/tutorial-delay-to-interrupts.md) — converting a blocking blink to timer interrupts
 - [Glossary](docs/glossary.md) — definitions for all acronyms, registers, and technical terms

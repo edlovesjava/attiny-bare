@@ -1,17 +1,22 @@
 /*
- * ATtiny85 Bare Metal Blink — Timer Interrupts
- * LED on PB3 (physical pin 2)
+ * ATtiny85 Bare Metal Blink + Button
+ * Blink LED on PB3 (physical pin 2)
+ * Button LED on PB4 (physical pin 3)
+ * Button on PB0 (physical pin 5) with internal pull-up
  * 8MHz internal oscillator
  *
- * Timer/Counter0 in CTC mode generates a 1ms interrupt tick.
- * The ISR decrements a counter; the main loop toggles the LED
- * when it hits zero. The CPU is free between ticks.
+ * Timer interrupt blinks PB3 independently. Button input on PB0
+ * with 50ms debounce controls a second LED on PB4. Both tasks
+ * share the same 1ms timer ISR — cooperative multitasking.
  */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define LED_PIN PB3
+#define BUTTON_PIN     PB0
+#define LED_PIN        PB3
+#define BUTTON_LED_PIN PB4
+
 #define BLINK_DELAY_MS 500
 
 
@@ -25,11 +30,16 @@ void timer0_init(void)
 }
 
 volatile uint16_t wait_time_ms = BLINK_DELAY_MS; // .5 second delay
+volatile uint16_t debounce_time_ms = 50; // debounce time counter
+volatile uint8_t button_pressed = 0; // button pressed flag
 
 int main(void)
 {
-    /* Set PB3 as output */
-    DDRB |= (1 << LED_PIN);
+    DDRB |= (1 << LED_PIN); // Set PB3 as output for LED control
+    DDRB |= (1 << BUTTON_LED_PIN); // Set PB4 as output for button state indication
+    DDRB &= ~(1 << BUTTON_PIN); // Set PB0 as input for button
+
+    PORTB |= (1 << BUTTON_PIN);  // Enable internal pull-up on button pin
 
     timer0_init(); // Initialize Timer0 for 1ms interrupts
 
@@ -40,24 +50,28 @@ int main(void)
         cli();
         uint16_t current_wait_time = wait_time_ms; // Read the current wait time
         sei();
-        if (current_wait_time == 0)
-        {
+
+        if (current_wait_time == 0) {
             wait_time_ms = BLINK_DELAY_MS; // Reset to .5 second
                                            // Toggle the LED using C register manipulation
-            if (led_on)
-            {
+            if (led_on) {
                 // Turn LED OFF
                 // also can be done with: PORTB &= ~(1 << LED_PIN);
                 __asm__ volatile("cbi %0, %1" : : "I"(_SFR_IO_ADDR(PORTB)), "I"(LED_PIN));
                 led_on = 0;
-            }
-            else
-            {
+            } else {
                 // Turn LED ON
                 // also can be done with: PORTB |= (1 << LED_PIN);
                 __asm__ volatile("sbi %0, %1" : : "I"(_SFR_IO_ADDR(PORTB)), "I"(LED_PIN));
                 led_on = 1;
             }
+        }
+
+        // Set the button LED state based on the button pressed flag
+        if (button_pressed == 1) {
+            PORTB |= (1 << BUTTON_LED_PIN); // Turn button LED ON
+        } else {
+            PORTB &= ~(1 << BUTTON_LED_PIN); // Turn button LED OFF
         }
     }
 }
@@ -65,8 +79,31 @@ int main(void)
 // Interrupt Service Routine (ISR) for Timer0 Compare Match A
 ISR(TIMER0_COMPA_vect)
 {
-    // decrement the wait time
+    // Manage wait time counter for LED blinking
     if (wait_time_ms > 0) {
         wait_time_ms--;
+    }
+
+    // Button debounce: only change state after 50ms of stable input
+    if (!(PINB & (1 << BUTTON_PIN))) {
+        // Pin is LOW — button pressed (active-low with pull-up)
+        if (!button_pressed) {
+            if (debounce_time_ms == 0) {
+                button_pressed = 1;
+                debounce_time_ms = 50; // Reset debounce time
+            } else {
+                debounce_time_ms--; // Decrement debounce timer
+            }
+        }
+    } else {
+        // Pin is HIGH — button released (pull-up)
+        if (button_pressed) {
+            if (debounce_time_ms == 0) {
+                button_pressed = 0;
+                debounce_time_ms = 50; // Reset debounce time
+            } else {
+                debounce_time_ms--; // Decrement debounce timer
+            }
+        }
     }
 }

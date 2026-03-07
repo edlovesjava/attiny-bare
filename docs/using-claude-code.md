@@ -52,9 +52,21 @@ This analyzes the codebase and creates a context file for future sessions.
 
 ## How to Get the Most Out of Claude Code
 
-### Use an Explanatory Style
+### Set the Output Style to Learning
 
-This is a learning project. Tell Claude Code you want explanations, not just answers. The difference is significant:
+Claude Code has an output style setting that changes how it responds. For a project like this, where understanding matters more than speed, set it to **learning** mode:
+
+```
+/config output-style learning
+```
+
+In learning mode, Claude Code explains *why* it's making each change — what the registers do, how the hardware responds, what would happen if you did it differently. Instead of silently editing a file, it walks you through the reasoning. This turns every task into a mini-tutorial.
+
+You can switch back to the default style anytime with `/config output-style default`.
+
+### Ask for Explanations, Not Just Answers
+
+Even without the learning output style, you can get explanatory responses by how you phrase your requests. The difference is significant:
 
 **Less useful:**
 > "Add a button debounce to PB4"

@@ -45,6 +45,46 @@ Key hardware details:
 - **Fuses**: LFUSE=0xE2, HFUSE=0xDF, EFUSE=0xFF
 - **ISP wiring**: Nano D10-D13 → ATtiny85 RESET/MOSI/MISO/SCK
 
+## Project Structure
+
+```
+attiny-bare/
+├── src/
+│   └── main.c                              # Interrupt-driven LED blink
+├── Makefile                                 # Build, flash, fuse targets
+├── docs/
+│   ├── plans/
+│   │   ├── 2026-02-28-blink-design.md       # Original project design
+│   │   └── 2026-03-07-tutorial-plan.md      # Full tutorial series roadmap (v0–v6)
+│   ├── tutorial-toolchain-setup.md          # AVR-GCC, avrdude, Make on Windows
+│   ├── tutorial-arduino-nano-isp.md         # Nano ISP wiring and troubleshooting
+│   ├── tutorial-bit-manipulation.md         # DDRB/PORTB/PINB register operations
+│   ├── tutorial-understanding-the-makefile.md # Build pipeline walkthrough
+│   ├── tutorial-delay-to-interrupts.md      # Blocking delay → timer ISR
+│   ├── tutorial-04-i2c-driver.md            # USI I2C master driver (interactive)
+│   ├── glossary.md                          # 100+ term definitions
+│   ├── references.md                        # Datasheets, BOM, suppliers, community
+│   └── using-claude-code.md                 # AI-assisted development guide
+├── CLAUDE.md
+└── README.md
+```
+
+## Tutorial Progression
+
+The project follows a staged tutorial series (see `docs/plans/2026-03-07-tutorial-plan.md`). Each stage has a corresponding `v*` tag when completed:
+
+| Tag | Stage | Key Concepts |
+|-----|-------|-------------|
+| `v0-project-seed` | Project setup | Toolchain, Makefile, build pipeline |
+| `v1-blink` | LED blink | Registers, timer, ISR, inline assembly |
+| `v2-bit-manipulation` | Bit operations | DDRB/PORTB/PINB, set/clear/test |
+| `v3-button-led` | Button input | Debouncing, pin change interrupts |
+| `v4-i2c-driver` | I2C driver | USI peripheral, multi-file structure |
+| `v5-ssd1306` | OLED display | SSD1306, fonts, PROGMEM |
+| `v6-bme280` | Sensor | BME280, calibration, compensation math |
+
+Pin assignments and flash/RAM budgets evolve across stages — consult the tutorial plan for details.
+
 ## Conventions
 
 - Shared variables between ISR and main loop must be `volatile`
@@ -52,6 +92,8 @@ Key hardware details:
 - `F_CPU` is defined in the Makefile via `-D`, not in source files
 - Tutorial docs live in `docs/` and are referenced from the README
 - Design docs go in `docs/plans/` with date prefix (YYYY-MM-DD)
+- Tutorial docs are named `tutorial-<topic>.md` or `tutorial-NN-<topic>.md` for numbered stages
+- As the project grows (v4+), source splits into multiple files with headers in `src/`
 
 ## Tutorial Coaching Mode
 
@@ -98,7 +140,7 @@ You are in tutorial coaching mode when:
 - The user asks for hints rather than implementation
 
 You are NOT in coaching mode when:
-- The user is on `main` branch doing project development
+- The user is on `master` branch doing project development
 - The user explicitly says "just write it" or "implement this"
 - The user is fixing a production issue
 

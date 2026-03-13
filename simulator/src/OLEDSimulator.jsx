@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { generateOLEDSteps } from "./oled/oledSteps.js";
-import { createInitialState, applyStep, OLED_COLS, OLED_PAGES, OLED_COL_OFF } from "./oled/ssd1306State.js";
+import { createInitialState, applyStep, OLED_COLS, OLED_ROWS, OLED_PAGES, OLED_COL_OFF } from "./oled/ssd1306State.js";
 
 const PHASE_COLORS = {
   INIT: "#6c71c4",
@@ -343,6 +343,85 @@ function PixelPreview({ cell }) {
   );
 }
 
+function DisplayPreview({ gddram, colOffset, displayOn }) {
+  // Render 72×40 pixel grid showing what the actual OLED screen looks like
+  const pixelSize = 3;
+  const cols = OLED_COLS;
+  const rows = OLED_ROWS;
+  const width = cols * pixelSize;
+  const height = rows * pixelSize;
+
+  // Build pixel data from GDDRAM
+  // Each GDDRAM byte is a vertical column of 8 pixels, LSB = top
+  const pixels = [];
+  if (displayOn) {
+    for (let page = 0; page < OLED_PAGES; page++) {
+      for (let col = 0; col < cols; col++) {
+        const byte = gddram[page * 128 + col + colOffset];
+        for (let bit = 0; bit < 8; bit++) {
+          const y = page * 8 + bit;
+          if (y >= rows) break;
+          if ((byte >> bit) & 1) {
+            pixels.push({ x: col * pixelSize, y: y * pixelSize });
+          }
+        }
+      }
+    }
+  }
+
+  return (
+    <div style={{
+      background: "#0a140a", border: "1px solid #1a2a1a", borderRadius: 6,
+      padding: "10px 14px",
+    }}>
+      <div style={{
+        display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8,
+      }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: "#00ff66", letterSpacing: 1,
+        }}>DISPLAY OUTPUT</div>
+        <div style={{ fontSize: 9, color: "#3a5a3a", fontStyle: "italic" }}>
+          72×40 pixels — {displayOn ? "display on" : "display off"}
+        </div>
+      </div>
+      <div style={{
+        display: "inline-block",
+        background: displayOn ? "#000000" : "#0a0a0a",
+        border: "2px solid #2a3a2a",
+        borderRadius: 4,
+        padding: 8,
+        transition: "background 0.3s",
+      }}>
+        <svg width={width} height={height} style={{ display: "block" }}>
+          {/* Off-state dim background */}
+          <rect width={width} height={height} fill={displayOn ? "#0a0a0a" : "#060606"} rx={2} />
+          {/* Lit pixels */}
+          {pixels.map((p, i) => (
+            <rect
+              key={i}
+              x={p.x} y={p.y}
+              width={pixelSize - 0.5} height={pixelSize - 0.5}
+              fill="#00ddff"
+              rx={0.5}
+            />
+          ))}
+          {/* Subtle pixel grid overlay */}
+          {displayOn && (
+            <g opacity={0.05}>
+              {Array.from({ length: cols + 1 }, (_, i) => (
+                <line key={`v${i}`} x1={i * pixelSize} y1={0} x2={i * pixelSize} y2={height} stroke="#fff" strokeWidth={0.25} />
+              ))}
+              {Array.from({ length: rows + 1 }, (_, i) => (
+                <line key={`h${i}`} x1={0} y1={i * pixelSize} x2={width} y2={i * pixelSize} stroke="#fff" strokeWidth={0.25} />
+              ))}
+            </g>
+          )}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 function PageMapGrid({ gddram, prevGddram, cursorCol, cursorPage, colOffset, onCellHover }) {
   const cells = [];
   for (let page = 0; page < OLED_PAGES; page++) {
@@ -607,6 +686,13 @@ export default function OLEDSimulator() {
           </div>
         </div>
       </div>
+
+      {/* Display Preview */}
+      <DisplayPreview
+        gddram={ssd1306State.gddram}
+        colOffset={OLED_COL_OFF}
+        displayOn={ssd1306State.display_on}
+      />
 
       {/* GDDRAM Page Map Grid */}
       <PageMapGrid

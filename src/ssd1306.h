@@ -15,4 +15,16 @@ void oled_clear(uint8_t fill);
 void oled_sleep(void);
 void oled_wake(void);
 
+// Set cursor position for text (col in pixels, page 0-4)
+void oled_set_cursor(uint8_t col, uint8_t page);
+
+// Draw a single character at current cursor position (advances cursor)
+void oled_putc(char c);
+
+// Draw a string at current cursor position
+void oled_puts(const char *s);
+
+// Draw a string at a specific position (col in pixels, page 0-4)
+void oled_text(uint8_t col, uint8_t page, const char *s);
+
 #endif

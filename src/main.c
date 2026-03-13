@@ -116,10 +116,9 @@ int main(void)
     i2c_init();
     oled_init();
 
-    // Flash screen white, then back to black
-    oled_clear(0xFF);   // all pixels on
-    _delay_ms(1000);
-    oled_clear(0x00);   // all pixels off
+    // Clear screen and display temperature
+    oled_clear(0x00);
+    oled_text(0, 0, "75\xB0""F");
     while (1)
     {
         cli();

@@ -6,6 +6,8 @@
 
 #include "ssd1306.h"
 #include "usi_i2c.h"
+#include "font5x7.h"
+#include <avr/pgmspace.h>
 
 // Send a single command byte
 static void oled_cmd(uint8_t c)
@@ -79,4 +81,60 @@ void oled_clear(uint8_t fill)
         i2c_send_byte(fill);
     }
     i2c_stop();
+}
+
+void oled_set_cursor(uint8_t col, uint8_t page)
+{
+    // Set column address window
+    i2c_start();
+    i2c_send_byte(OLED_ADDR << 1);
+    i2c_send_byte(0x00);
+    i2c_send_byte(0x21);                         // set column address
+    i2c_send_byte(OLED_COL_OFF + col);           // start
+    i2c_send_byte(OLED_COL_OFF + OLED_COLS - 1); // end (allow wrapping)
+    i2c_stop();
+
+    // Set page address
+    i2c_start();
+    i2c_send_byte(OLED_ADDR << 1);
+    i2c_send_byte(0x00);
+    i2c_send_byte(0x22);                         // set page address
+    i2c_send_byte(page);                         // start
+    i2c_send_byte(OLED_PAGES - 1);               // end
+    i2c_stop();
+}
+
+void oled_putc(char c)
+{
+    const uint8_t *glyph = font_glyph(c);
+
+    i2c_start();
+    i2c_send_byte(OLED_ADDR << 1);
+    i2c_send_byte(0x40);                         // control: data
+
+    if (glyph) {
+        for (uint8_t i = 0; i < 5; i++) {
+            i2c_send_byte(pgm_read_byte(&glyph[i]));
+        }
+    } else {
+        for (uint8_t i = 0; i < 5; i++) {
+            i2c_send_byte(0x00);
+        }
+    }
+    i2c_send_byte(0x00);                         // 1px gap between chars
+
+    i2c_stop();
+}
+
+void oled_puts(const char *s)
+{
+    while (*s) {
+        oled_putc(*s++);
+    }
+}
+
+void oled_text(uint8_t col, uint8_t page, const char *s)
+{
+    oled_set_cursor(col, page);
+    oled_puts(s);
 }

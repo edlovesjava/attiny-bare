@@ -12,6 +12,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include "usi_i2c.h"
+#include "ssd1306.h"
 #include <util/delay.h>
 
 #define BUTTON_PIN     PB4
@@ -111,9 +112,14 @@ int main(void)
 
     uint8_t led_on = 0;
 
-    // Scan I2C bus and blink found addresses in binary
+    // Initialize I2C and OLED
     i2c_init();
-    scan_and_report();
+    oled_init();
+
+    // Flash screen white, then back to black
+    oled_clear(0xFF);   // all pixels on
+    _delay_ms(1000);
+    oled_clear(0x00);   // all pixels off
     while (1)
     {
         cli();

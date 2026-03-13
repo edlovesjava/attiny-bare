@@ -28,12 +28,17 @@ This tutorial is designed to be worked through interactively with Claude Code. R
 /config output-style learning
 ```
 
-**Useful prompts:**
-- "Give me a hint" — get a nudge in the right direction
-- "Explain [concept]" — deep dive into a register, protocol, or technique
-- "Review my code" — get feedback on what you've written
-- "What's wrong?" — debug an error or unexpected behavior
-- "Show me the answer" — when you're truly stuck and want the solution
+**Tutorial commands:**
+
+| Command | What It Does |
+|---------|-------------|
+| `/hint` | Get a small nudge — escalates if you ask again on the same topic |
+| `/explain` | Deep dive into a concept, register, or protocol |
+| `/review` | Get feedback on your code — identifies issues without fixing them |
+| `/debug` | Systematic help when code compiles but doesn't work right |
+| `/build` | Compile and report flash/RAM usage |
+| `/flash` | Build and upload to the ATtiny85 |
+| `/answer` | When you're truly stuck — shows the solution with explanation |
 
 **If you get completely lost**, you can always see the completed code:
 ```bash

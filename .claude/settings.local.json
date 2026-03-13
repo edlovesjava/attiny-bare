@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(make:*)",
+      "Bash(git:*)",
+      "Bash(find /c/Users/edlov/Projects/attiny-bare -maxdepth 3 -type f | grep -E \"\\\\.\\(json|html|css|js|ts|jsx|tsx|yaml|yml\\)$\" | grep -v \".git\" | grep -v \".worktrees\")",
+      "Bash(wc -l /c/Users/edlov/Projects/attiny-bare/docs/*.md)",
+      "Bash(node --version 2>&1; npm --version 2>&1)",
+      "Bash(npm create:*)",
+      "Bash(cd /c/Users/edlov/Projects/attiny-bare/simulator && npm install 2>&1)",
+      "Bash(npx vite:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:ww1.microchip.com)"
+    ]
+  },
+  "outputStyle": "default"
+}

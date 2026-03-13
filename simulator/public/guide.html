@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATtiny85 USI — I2C Transaction Reference</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #070d07;
+    color: #c0d0c0;
+    font-family: 'IBM Plex Mono', 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.7;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    color: #00ff66;
+    border-bottom: 1px solid #1a3a1a;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.5px;
+  }
+
+  h1 span.dim { color: #586e75; }
+
+  /* Table of contents */
+  .toc {
+    border: 1px solid #1a3a1a;
+    background: #0a120a;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2.5rem;
+    border-radius: 4px;
+  }
+
+  .toc-title {
+    color: #586e75;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+  }
+
+  .toc ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .toc li {
+    margin: 0.3rem 0;
+  }
+
+  .toc a {
+    color: #c0d0c0;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .toc a:hover { color: #00ff66; }
+  .toc .phase-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  /* Phase sections */
+  .phase {
+    margin-bottom: 3rem;
+    padding-top: 1rem;
+  }
+
+  .phase h2 {
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #1a3a1a;
+  }
+
+  .phase-idle h2    { color: #586e75; border-bottom-color: #586e7544; }
+  .phase-init h2    { color: #6c71c4; border-bottom-color: #6c71c444; }
+  .phase-start h2   { color: #dc322f; border-bottom-color: #dc322f44; }
+  .phase-addr h2    { color: #b58900; border-bottom-color: #b5890044; }
+  .phase-ack h2     { color: #2aa198; border-bottom-color: #2aa19844; }
+  .phase-data h2    { color: #268bd2; border-bottom-color: #268bd244; }
+  .phase-stop h2    { color: #d33682; border-bottom-color: #d3368244; }
+
+  /* Individual anchor sections */
+  .ref-section {
+    margin-bottom: 2rem;
+    padding: 1rem 1.25rem;
+    background: #0a120a;
+    border-left: 3px solid #1a3a1a;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .phase-idle .ref-section    { border-left-color: #586e7566; }
+  .phase-init .ref-section    { border-left-color: #6c71c466; }
+  .phase-start .ref-section   { border-left-color: #dc322f66; }
+  .phase-addr .ref-section    { border-left-color: #b5890066; }
+  .phase-ack .ref-section     { border-left-color: #2aa19866; }
+  .phase-data .ref-section    { border-left-color: #268bd266; }
+  .phase-stop .ref-section    { border-left-color: #d3368266; }
+
+  .ref-section h3 {
+    font-size: 0.95rem;
+    color: #8a9a8a;
+    margin-bottom: 0.6rem;
+  }
+
+  .ref-section p {
+    margin-bottom: 0.5rem;
+  }
+
+  /* Inline styling */
+  .reg {
+    color: #00ff66;
+    font-weight: bold;
+  }
+
+  .bit {
+    background: #122012;
+    color: #90c090;
+    padding: 0.05em 0.35em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  code.snippet {
+    display: block;
+    background: #0c160c;
+    border: 1px solid #1a2a1a;
+    color: #00ff66;
+    padding: 0.6rem 0.9rem;
+    margin: 0.6rem 0;
+    border-radius: 4px;
+    font-size: 0.9em;
+    overflow-x: auto;
+  }
+
+  .back-to-top {
+    display: inline-block;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: #3a5a3a;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .back-to-top:hover { color: #00ff66; }
+
+  .common-mistakes {
+    margin-top: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    background: #120c0c;
+    border: 1px solid #2a1a1a;
+    border-radius: 4px;
+    color: #c09090;
+    font-size: 0.9em;
+  }
+
+  .common-mistakes strong {
+    color: #dc322f;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1rem;
+    border-top: 1px solid #1a3a1a;
+    color: #3a5a3a;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>ATtiny85 USI <span class="dim">—</span> I2C Transaction Reference</h1>
+
+<!-- Table of Contents -->
+<nav class="toc" id="top">
+  <div class="toc-title">Phases</div>
+  <ul>
+    <li><span class="phase-dot" style="background:#586e75"></span><a href="#phase-idle">IDLE</a> — Bus resting state</li>
+    <li><span class="phase-dot" style="background:#6c71c4"></span><a href="#phase-init">INIT</a> — USI peripheral configuration</li>
+    <li><span class="phase-dot" style="background:#dc322f"></span><a href="#phase-start">START</a> — Claiming the bus</li>
+    <li><span class="phase-dot" style="background:#b58900"></span><a href="#phase-addr">ADDR</a> — Sending the device address</li>
+    <li><span class="phase-dot" style="background:#2aa198"></span><a href="#phase-ack">ACK</a> — Slave acknowledgement</li>
+    <li><span class="phase-dot" style="background:#268bd2"></span><a href="#phase-data">DATA</a> — Sending a data byte</li>
+    <li><span class="phase-dot" style="background:#d33682"></span><a href="#phase-stop">STOP</a> — Releasing the bus</li>
+  </ul>
+</nav>
+
+<!-- ====== IDLE ====== -->
+<section class="phase phase-idle" id="phase-idle">
+  <h2>IDLE</h2>
+
+  <div class="ref-section" id="idle-bus">
+    <h3># idle-bus — Bus Idle State</h3>
+    <p>
+      When no device is communicating, both <span class="reg">SDA</span> and
+      <span class="reg">SCL</span> float HIGH, held there by external pull-up
+      resistors (typically 4.7k&Omega; to VCC). No device is actively driving
+      either line. This is the resting state of the I2C bus and the condition
+      that every device checks before initiating a transaction.
+    </p>
+    <p>
+      The pull-up resistors are essential — I2C uses open-drain signaling,
+      meaning devices can only pull lines LOW. They release the line and let
+      the resistor pull it back HIGH. If you forget the pull-ups, both lines
+      will float and nothing works.
+    </p>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Forgetting external pull-up resistors.
+      Internal pull-ups on the ATtiny85 are too weak (~50k&Omega;) for reliable
+      I2C. You need 4.7k&Omega; external resistors on both SDA and SCL.
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== INIT ====== -->
+<section class="phase phase-init" id="phase-init">
+  <h2>INIT</h2>
+
+  <div class="ref-section" id="init-usidr">
+    <h3># init-usidr — Loading USIDR and Configuring USICR</h3>
+    <p>
+      The <code>i2c_init()</code> function starts by loading <span class="reg">USIDR</span>
+      with 0xFF. This ensures that when the SDA pin is configured as an output, it drives
+      HIGH — matching the idle bus state. If USIDR held 0x00, enabling the output would
+      yank SDA LOW and generate a false START condition.
+    </p>
+    <p>
+      Next, <span class="reg">USICR</span> is configured for two-wire (I2C) mode.
+      The key bits are <span class="bit">USIWM1:0</span> = 10 (two-wire mode, which
+      connects USIDR bit 7 to the SDA pin) and <span class="bit">USICS1:0</span> = 10
+      (software clock strobe — the firmware toggles SCL by writing to
+      <span class="bit">USITC</span>).
+    </p>
+    <code class="snippet">USICR = (1 &lt;&lt; USIWM1) | (1 &lt;&lt; USICS1) | (1 &lt;&lt; USICLK);</code>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Forgetting to pre-load USIDR with 0xFF before
+      setting the pin as output. This causes a glitch on SDA that looks like a START
+      condition to other devices.
+    </div>
+  </div>
+
+  <div class="ref-section" id="init-usisr">
+    <h3># init-usisr — Clearing the Status Register</h3>
+    <p>
+      <span class="reg">USISR</span> is split into two halves. The upper nibble
+      (bits 7:4) contains interrupt flags: <span class="bit">USISIF</span> (Start),
+      <span class="bit">USIOIF</span> (Overflow), <span class="bit">USIPF</span> (Stop),
+      and <span class="bit">USIDC</span> (Data Collision). The lower nibble (bits 3:0)
+      is the 4-bit clock edge counter.
+    </p>
+    <p>
+      To clear the flags, you write 1 to each flag bit — this is a standard AVR
+      "write-1-to-clear" pattern. Writing 0 to the counter bits resets the counter.
+      The counter counts both rising and falling edges of SCL, so it takes 16 edges
+      (8 rising + 8 falling) to transfer one byte — at which point it overflows from
+      15 to 0 and sets <span class="bit">USIOIF</span>.
+    </p>
+    <code class="snippet">USISR = (1 &lt;&lt; USISIF) | (1 &lt;&lt; USIOIF) | (1 &lt;&lt; USIPF);</code>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Trying to clear flags by writing 0 to them.
+      On AVR, interrupt flags are cleared by writing 1, not 0. Writing 0 leaves
+      them unchanged.
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== START ====== -->
+<section class="phase phase-start" id="phase-start">
+  <h2>START</h2>
+
+  <div class="ref-section" id="start-sda-fall">
+    <h3># start-sda-fall — SDA Falls While SCL Is HIGH</h3>
+    <p>
+      The I2C START condition is defined as SDA transitioning from HIGH to LOW while
+      SCL remains HIGH. This is the universal "attention" signal on the bus — every
+      device monitors for it. The master generates this by clearing the
+      <span class="reg">PORTB</span> bit for SDA while SCL is still HIGH, which
+      drives SDA LOW through the open-drain output.
+    </p>
+    <p>
+      The USI hardware automatically detects this transition and sets the
+      <span class="bit">USISIF</span> (Start condition Interrupt Flag) in
+      <span class="reg">USISR</span>. In polled mode (no interrupts), the firmware
+      checks this flag to confirm the START was generated successfully.
+    </p>
+    <p>
+      During normal data transfer, SDA is only allowed to change while SCL is LOW.
+      The START condition is special precisely because SDA changes while SCL is HIGH —
+      that is what makes it distinguishable from regular data.
+    </p>
+  </div>
+
+  <div class="ref-section" id="start-scl-fall">
+    <h3># start-scl-fall — SCL Pulled LOW After START</h3>
+    <p>
+      Immediately after the START condition, the master pulls SCL LOW. Now both SDA
+      and SCL are LOW. This marks the beginning of the first clock cycle and signals
+      to all devices that a transmission is about to begin. The bus is now claimed —
+      no other master may transmit until a STOP condition releases it.
+    </p>
+    <p>
+      From this point forward, the master controls SCL by toggling it with software
+      strobes (writing to <span class="bit">USITC</span> in <span class="reg">USICR</span>).
+      The master will toggle SCL for each bit of the address byte, then the ACK bit,
+      then data bytes, until it issues a STOP.
+    </p>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Not waiting long enough between pulling SDA LOW
+      and pulling SCL LOW. The I2C spec requires a minimum hold time for the START
+      condition (typically ~4&mu;s at 100kHz). Without a brief delay, fast masters
+      may violate timing requirements.
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== ADDR ====== -->
+<section class="phase phase-addr" id="phase-addr">
+  <h2>ADDR</h2>
+
+  <div class="ref-section" id="addr-load-usidr">
+    <h3># addr-load-usidr — Loading the Address Byte</h3>
+    <p>
+      The master loads the 8-bit address frame into <span class="reg">USIDR</span>.
+      I2C uses a 7-bit device address occupying bits 7:1, with bit 0 as the
+      R/<span style="text-decoration:overline">W</span> flag (0 = write, 1 = read).
+      So the address is shifted left by one and OR'd with the direction bit.
+    </p>
+    <code class="snippet">USIDR = (slave_addr &lt;&lt; 1) | 0;  // write to 0x3C → 0x78</code>
+    <p>
+      The master also sets <span class="reg">DDRB</span> for the SDA pin to OUTPUT so
+      it can drive data onto the bus. In two-wire mode, bit 7 of USIDR is physically
+      connected to the SDA line, so whatever is in the MSB appears on the wire immediately.
+    </p>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Sending the 7-bit address without shifting it left.
+      If your device is at address 0x3C and you load 0x3C into USIDR, you are actually
+      addressing device 0x1E with a read bit — not what you want.
+    </div>
+  </div>
+
+  <div class="ref-section" id="addr-clock-rising">
+    <h3># addr-clock-rising — Rising Edge: Slave Samples SDA, USIDR Shifts</h3>
+    <p>
+      When the master toggles SCL HIGH (by writing 1 to <span class="bit">USITC</span>
+      in <span class="reg">USICR</span>), the slave device samples the SDA line. Whatever
+      logic level SDA holds at this moment is the bit value the slave reads. This is why
+      SDA must be stable before SCL rises — changing SDA while SCL is HIGH would be
+      interpreted as a START or STOP condition.
+    </p>
+    <p>
+      With <span class="bit">USICS1</span>=1 (external positive-edge clock source), the
+      USI shifts <span class="reg">USIDR</span> left by one bit on this rising edge. The
+      bit that was in position 6 moves to position 7 (the MSB), and since bit 7 is
+      connected to SDA in two-wire mode, the next data bit now appears on the wire.
+      This automatic shift is the key advantage of the USI — you load the byte once and
+      the hardware handles the bit-by-bit serialization.
+    </p>
+    <p>
+      The 4-bit counter in <span class="reg">USISR</span> also increments by 1 (via the
+      <span class="bit">USICLK</span> software strobe written in the same
+      <span class="reg">USICR</span> write).
+    </p>
+  </div>
+
+  <div class="ref-section" id="addr-clock-falling">
+    <h3># addr-clock-falling — Falling Edge: Counter Increments Only</h3>
+    <p>
+      When SCL falls back LOW, the counter increments again (via another
+      <span class="bit">USICLK</span> strobe), but the data register does
+      <strong>not</strong> shift — with <span class="bit">USICS1</span>=1, shifts only
+      happen on positive (rising) edges. SDA remains stable showing the next bit to send.
+    </p>
+    <p>
+      After one complete bit (one rising + one falling edge), the counter has increased
+      by 2. A full byte takes the counter from 0 to 16, which causes an overflow.
+    </p>
+  </div>
+
+  <div class="ref-section" id="addr-overflow">
+    <h3># addr-overflow — Counter Overflow After 8 Bits</h3>
+    <p>
+      After 8 bits have been clocked out (16 edges: 8 rising + 8 falling), the 4-bit
+      counter overflows from 15 back to 0. This overflow sets the
+      <span class="bit">USIOIF</span> (Counter Overflow Interrupt Flag) in
+      <span class="reg">USISR</span>. The firmware polls this flag in a tight loop
+      to know when the byte transfer is complete.
+    </p>
+    <p>
+      At this point, the address byte has been fully transmitted. The slave that
+      recognizes its address will prepare to send an ACK on the next clock cycle.
+      The master must now release SDA and clock one more bit to read the acknowledgement.
+    </p>
+    <code class="snippet">while (!(USISR &amp; (1 &lt;&lt; USIOIF))) { /* toggle SCL */ }</code>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== ACK ====== -->
+<section class="phase phase-ack" id="phase-ack">
+  <h2>ACK</h2>
+
+  <div class="ref-section" id="ack-release-sda">
+    <h3># ack-release-sda — Master Releases SDA</h3>
+    <p>
+      After transmitting 8 bits, the master must let go of SDA so the slave can respond.
+      It does this by switching <span class="reg">DDRB</span> for the SDA pin to INPUT (0),
+      which tri-states the pin — the master is no longer driving it. The external pull-up
+      resistor pulls SDA HIGH by default.
+    </p>
+    <p>
+      If a slave recognized the address, it will actively pull SDA LOW during the next
+      clock cycle. If no slave responds (wrong address, device missing, or device busy),
+      SDA stays HIGH from the pull-up. This is the difference between ACK (LOW) and
+      NACK (HIGH).
+    </p>
+    <p>
+      The counter is pre-loaded to 14 (0x0E) so that it overflows after exactly 2 more
+      edges (14 &rarr; 15 &rarr; 0), which equals one clock cycle — just enough to
+      read the single ACK/NACK bit.
+    </p>
+    <code class="snippet">USISR = (1 &lt;&lt; USIOIF) | (1 &lt;&lt; USIPF) | 14; // 1-bit transfer</code>
+  </div>
+
+  <div class="ref-section" id="ack-clock-rising">
+    <h3># ack-clock-rising — Reading the ACK Bit</h3>
+    <p>
+      The master toggles SCL HIGH for the 9th clock cycle. On this rising edge, the
+      master reads SDA via <span class="reg">USIDR</span> bit 0 (the input shift).
+      If the slave is holding SDA LOW, the bit reads as 0 — this is an ACK, meaning
+      the slave received the address and is ready for data.
+    </p>
+    <p>
+      If SDA reads HIGH, it is a NACK. This means either no device has that address,
+      the device is busy, or there is a wiring problem. The master should typically
+      issue a STOP condition and retry or report an error. In the simulator, you will
+      see a green SDA line for ACK (slave pulling LOW) or the line staying HIGH for NACK.
+    </p>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Forgetting to pre-load the counter to 14 for the
+      ACK bit. If the counter starts at 0, the master will clock 8 bits instead of 1,
+      corrupting the transaction.
+    </div>
+  </div>
+
+  <div class="ref-section" id="ack-clock-falling">
+    <h3># ack-clock-falling — Completing the ACK Cycle</h3>
+    <p>
+      SCL falls LOW, completing the ACK clock cycle. The counter overflows (14 &rarr; 15
+      &rarr; 0) and sets <span class="bit">USIOIF</span> in <span class="reg">USISR</span>.
+      The firmware detects this overflow and reads the result from
+      <span class="reg">USIDR</span> to determine ACK or NACK.
+    </p>
+    <p>
+      After reading the ACK, the master reclaims SDA by setting <span class="reg">DDRB</span>
+      for the SDA pin back to OUTPUT. It is now ready to load the next byte into
+      <span class="reg">USIDR</span> and transmit data, or to issue a STOP condition
+      to end the transaction.
+    </p>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== DATA ====== -->
+<section class="phase phase-data" id="phase-data">
+  <h2>DATA</h2>
+
+  <div class="ref-section" id="data-load-usidr">
+    <h3># data-load-usidr — Loading the Data Byte</h3>
+    <p>
+      The process is identical to the address phase. The master loads the data value
+      (for example, 0x42) into <span class="reg">USIDR</span> and resets the counter
+      in <span class="reg">USISR</span> to 0. The USI hardware does not distinguish
+      between address bytes and data bytes — that distinction exists only at the
+      protocol level. From the hardware's perspective, it is always just shifting out
+      8 bits and counting 16 edges.
+    </p>
+    <p>
+      Multiple data bytes can be sent in sequence, each followed by an ACK cycle.
+      The slave address is only sent once per transaction (after the START condition).
+      Everything after the first ACK is data until the master issues a STOP.
+    </p>
+  </div>
+
+  <div class="ref-section" id="data-clock-rising">
+    <h3># data-clock-rising — Rising Edge: Slave Samples Data</h3>
+    <p>
+      Identical to the address phase. When SCL goes HIGH, the slave samples SDA and
+      captures the current bit value. The counter increments by 1. The master must
+      ensure SDA is stable before raising SCL — all data transitions happen while
+      SCL is LOW.
+    </p>
+    <p>
+      Each rising edge is a "capture moment." If you looked at the bus with a logic
+      analyzer, you would see SDA change only while SCL is LOW, and remain stable
+      during the entire HIGH period of SCL. This discipline is what keeps data
+      transfer reliable on a shared bus.
+    </p>
+  </div>
+
+  <div class="ref-section" id="data-clock-falling">
+    <h3># data-clock-falling — Falling Edge: USIDR Shifts</h3>
+    <p>
+      Identical to the address phase. The USI hardware shifts <span class="reg">USIDR</span>
+      left by one bit on each falling edge, placing the next bit in the MSB position
+      (bit 7) where it connects to SDA. The counter increments again. After this edge,
+      the next bit to transmit is already on the wire, waiting for the next rising edge
+      when the slave will sample it.
+    </p>
+  </div>
+
+  <div class="ref-section" id="data-overflow">
+    <h3># data-overflow — Counter Overflow After 8 Data Bits</h3>
+    <p>
+      After 16 clock edges (8 complete bit cycles), the counter overflows and sets
+      <span class="bit">USIOIF</span>. The firmware detects this and knows the data
+      byte is fully transmitted. The flow then returns to the ACK phase — the master
+      releases SDA, pre-loads the counter to 14, and clocks one more bit to read the
+      slave's acknowledgement.
+    </p>
+    <p>
+      This cycle of load-clock-overflow-ACK repeats for every data byte in the
+      transaction. A single I2C write transaction might send one byte or hundreds —
+      the protocol is the same each time.
+    </p>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<!-- ====== STOP ====== -->
+<section class="phase phase-stop" id="phase-stop">
+  <h2>STOP</h2>
+
+  <div class="ref-section" id="stop-sda-low">
+    <h3># stop-sda-low — Force SDA LOW</h3>
+    <p>
+      The STOP condition requires SDA to rise while SCL is HIGH — the mirror image
+      of a START. To guarantee a clean rising edge, the master first forces SDA LOW
+      (it may already be LOW from the last data bit or ACK, but we ensure it). This
+      is done by clearing the <span class="reg">PORTB</span> SDA bit and setting
+      <span class="reg">DDRB</span> SDA to OUTPUT.
+    </p>
+    <p>
+      At this point, SCL is still LOW from the last clock cycle. Both lines are now
+      LOW, which is the setup for the STOP sequence.
+    </p>
+  </div>
+
+  <div class="ref-section" id="stop-scl-rise">
+    <h3># stop-scl-rise — Release SCL</h3>
+    <p>
+      The master releases SCL by either toggling it via <span class="bit">USITC</span>
+      or by switching the SCL pin to input and letting the pull-up resistor bring it HIGH.
+      SCL rises while SDA remains LOW. This is not yet a STOP condition — SDA changing
+      while SCL is HIGH is what defines START and STOP. Right now SCL has changed, not SDA.
+    </p>
+    <p>
+      The master must wait for SCL to actually reach a HIGH level before proceeding.
+      In multi-master or clock-stretching scenarios, a slow slave could hold SCL LOW.
+      For a single-master bus with no clock stretching, a brief delay is sufficient.
+    </p>
+  </div>
+
+  <div class="ref-section" id="stop-sda-rise">
+    <h3># stop-sda-rise — SDA Rises: STOP Condition</h3>
+    <p>
+      Finally, the master releases SDA while SCL is HIGH. SDA rises via the pull-up
+      resistor, generating the STOP condition. Every device on the bus recognizes this
+      transition and knows the bus is now free. The USI hardware sets
+      <span class="bit">USIPF</span> (Stop condition Flag) in <span class="reg">USISR</span>.
+    </p>
+    <p>
+      The bus returns to the IDLE state — both lines HIGH, no device driving. Another
+      transaction can begin after the required bus-free time (typically ~4.7&mu;s at
+      100kHz). The I2C transaction is complete.
+    </p>
+    <div class="common-mistakes">
+      <strong>Common mistake:</strong> Releasing SDA before SCL is HIGH. If SDA rises
+      while SCL is still LOW, it is just a normal data transition — not a STOP condition.
+      The slave will not recognize it and the bus will be stuck in a busy state.
+    </div>
+  </div>
+
+  <a href="#top" class="back-to-top">&uarr; back to top</a>
+</section>
+
+<footer>
+  ATtiny85 USI I2C Simulator &middot; Reference Guide
+</footer>
+
+</div>
+</body>
+</html>

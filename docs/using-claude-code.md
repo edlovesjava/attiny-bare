@@ -50,6 +50,22 @@ If you're starting a new project and want to generate a `CLAUDE.md`, use:
 
 This analyzes the codebase and creates a context file for future sessions.
 
+## Tutorial Commands
+
+When working through the interactive tutorials (v4 onward), these custom commands are available:
+
+| Command | What It Does |
+|---------|-------------|
+| `/hint` | Get a nudge in the right direction — escalates if you call it again on the same topic |
+| `/explain` | Deep dive into a concept, register, or protocol with diagrams and examples |
+| `/review` | Read your code, build it, and identify issues — without writing the fix for you |
+| `/debug` | Systematic debugging when code compiles but doesn't behave as expected |
+| `/build` | Compile with `make clean && make` and report flash/RAM usage |
+| `/flash` | Build and upload to the ATtiny85 (e.g., `/flash COM21`) |
+| `/answer` | Show the solution code with full explanation — use when you're truly stuck |
+
+These commands guide Claude Code to act as a **tutorial coach** rather than a code generator. It will teach you concepts, point out bugs, and give hints — but it won't write your code unless you explicitly ask with `/answer`.
+
 ## How to Get the Most Out of Claude Code
 
 ### Set the Output Style to Learning

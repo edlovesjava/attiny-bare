@@ -19,7 +19,7 @@ LDFLAGS    = -mmcu=$(MCU)
 # Programmer settings (Arduino Nano as ISP)
 PROGRAMMER = stk500v1
 BAUD       = 19200
-PORT       ?= COM21
+PORT       ?= COM39
 
 # Fuse values (8MHz internal oscillator)
 LFUSE      = 0xE2

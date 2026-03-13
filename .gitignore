@@ -3,3 +3,5 @@ build/
 *.elf
 *.hex
 .worktrees/
+node_modules/
+simulator/dist/

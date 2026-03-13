@@ -1,27 +1,83 @@
 /*
- * ATtiny85 OLED Display Test
- * I2C OLED on PB0 (SDA) / PB2 (SCL)
+ * ATtiny85 OLED + BME280 Weather Display
+ * I2C bus: PB0 (SDA), PB2 (SCL)
+ * Devices: SSD1306 0.42" OLED @ 0x3C, BME280 @ 0x76
  * 8MHz internal oscillator
  */
 
 #include <avr/io.h>
 #include "usi_i2c.h"
 #include "ssd1306.h"
+#include "bme280.h"
 #include <util/delay.h>
+#include <stdlib.h>
+
+// Convert Celsius x100 to Fahrenheit x100
+static int16_t c_to_f(int16_t c_x100)
+{
+    return (int16_t)(((int32_t)c_x100 * 9) / 5 + 3200);
+}
+
+// Format integer into string buffer (right-aligned, no leading zeros)
+static void int_to_str(int16_t val, char *buf, uint8_t len)
+{
+    uint8_t neg = 0;
+    if (val < 0) { neg = 1; val = -val; }
+
+    for (uint8_t i = len; i > 0; i--) {
+        buf[i - 1] = '0' + (val % 10);
+        val /= 10;
+        if (val == 0 && i > 1) {
+            // Fill remaining with spaces
+            for (uint8_t j = 0; j < i - 1; j++) {
+                buf[j] = ' ';
+            }
+            if (neg && i >= 2) buf[i - 2] = '-';
+            break;
+        }
+    }
+    buf[len] = '\0';
+}
 
 int main(void)
 {
-    // Initialize I2C and OLED
     i2c_init();
     oled_init();
-
-    // Fill white, pause, then draw text on black
-    oled_clear(0xFF);
-    _delay_ms(1000);
     oled_clear(0x00);
-    oled_text(6, 2, "75\xB0""F");  // page 2 = middle, col 6 to avoid left cutoff
+
+    if (!bme280_init()) {
+        oled_text(6, 2, "NO BME");
+        while (1);
+    }
+
+    char line[10];
+    bme280_reading_t reading;
 
     while (1) {
-        // nothing for now
+        bme280_read(&reading);
+
+        // Temperature in °F (whole degrees)
+        int16_t temp_f = c_to_f(reading.temp_c_x100);
+        int_to_str(temp_f / 100, line, 3);
+        line[3] = '\xB0';  // degree symbol
+        line[4] = 'F';
+        line[5] = '\0';
+        oled_text(6, 0, line);
+
+        // Humidity in %
+        int_to_str(reading.hum_x100 / 100, line, 3);
+        line[3] = '%';
+        line[4] = '\0';
+        oled_text(6, 2, line);
+
+        // Pressure in hPa (divide Pa by 100)
+        int_to_str((int16_t)(reading.press_pa / 100), line, 4);
+        line[4] = 'h';
+        line[5] = 'P';
+        line[6] = 'a';
+        line[7] = '\0';
+        oled_text(0, 4, line);
+
+        _delay_ms(2000);  // update every 2 seconds
     }
 }

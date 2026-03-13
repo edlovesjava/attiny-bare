@@ -56,27 +56,24 @@ int main(void)
     while (1) {
         bme280_read(&reading);
 
-        // Temperature in °F (whole degrees)
+        // Line 1: "75F 41%" (temp + humidity)
         int16_t temp_f = c_to_f(reading.temp_c_x100);
         int_to_str(temp_f / 100, line, 3);
-        line[3] = '\xB0';  // degree symbol
-        line[4] = 'F';
-        line[5] = '\0';
-        oled_text(6, 0, line);
+        line[3] = 'F';
+        line[4] = ' ';
+        int_to_str(reading.hum_x100 / 100, &line[5], 3);
+        line[8] = '%';
+        line[9] = '\0';
+        oled_text(6, 1, line);
 
-        // Humidity in %
-        int_to_str(reading.hum_x100 / 100, line, 3);
-        line[3] = '%';
-        line[4] = '\0';
-        oled_text(6, 2, line);
-
-        // Pressure in hPa (divide Pa by 100)
+        // Line 2: "1013hPa" centered
+        // 7 chars × 6px = 42px, centered in 72px → col (72-42)/2 = 15
         int_to_str((int16_t)(reading.press_pa / 100), line, 4);
         line[4] = 'h';
         line[5] = 'P';
         line[6] = 'a';
         line[7] = '\0';
-        oled_text(0, 4, line);
+        oled_text(15, 3, line);
 
         _delay_ms(2000);  // update every 2 seconds
     }

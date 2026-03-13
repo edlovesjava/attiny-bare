@@ -111,6 +111,175 @@ function RegCell({ reg, state, prevState }) {
   );
 }
 
+// Memory budget data
+const FLASH_TOTAL = 8192;
+const RAM_TOTAL = 512;
+
+const FLASH_FUNCTIONS = [
+  { name: "i2c_init", size: 14 },
+  { name: "i2c_start", size: 18 },
+  { name: "i2c_stop", size: 16 },
+  { name: "i2c_send_byte", size: 48 },
+  { name: "font5x7", size: 95 },
+  { name: "oled_init", size: 86 },
+  { name: "oled_clear", size: 42 },
+  { name: "oled_putc", size: 38 },
+  { name: "oled_puts", size: 22 },
+  { name: "oled_text", size: 28 },
+  { name: "oled_set_cursor", size: 34 },
+  { name: "main", size: 50, approx: true },
+];
+
+const PHASE_ACTIVE_FUNCTIONS = {
+  INIT: ["oled_init", "i2c_start", "i2c_send_byte", "i2c_stop"],
+  CLEAR: ["oled_clear", "i2c_start", "i2c_send_byte", "i2c_stop"],
+  CURSOR: ["oled_set_cursor", "i2c_start", "i2c_send_byte", "i2c_stop"],
+  TEXT: ["oled_putc", "font5x7", "i2c_start", "i2c_send_byte", "i2c_stop"],
+};
+
+const RAM_ITEMS = [
+  { name: "Stack", size: 30, approx: true, note: "(grows down)" },
+  { name: "cursor_col", size: 1 },
+  { name: "cursor_page", size: 1 },
+];
+
+function MemoryProgressBar({ used, total, label }) {
+  const pct = (used / total) * 100;
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{
+        fontSize: 11, fontWeight: 700, color: "#00ff66", letterSpacing: 1,
+        marginBottom: 4,
+      }}>{label}</div>
+      <div style={{
+        height: 10, background: "#1a2a1a", borderRadius: 4, overflow: "hidden",
+      }}>
+        <div style={{
+          height: "100%", width: `${pct}%`, background: "#00ff66",
+          borderRadius: 4, transition: "width 0.3s",
+          boxShadow: "0 0 6px #00ff6644",
+        }} />
+      </div>
+    </div>
+  );
+}
+
+function MemoryBudget({ currentPhase }) {
+  const activeSet = new Set(PHASE_ACTIVE_FUNCTIONS[currentPhase] || []);
+  const flashUsed = FLASH_FUNCTIONS.reduce((s, f) => s + f.size, 0);
+  const ramUsed = RAM_ITEMS.reduce((s, f) => s + f.size, 0);
+  const isText = currentPhase === "TEXT";
+
+  // Split flash functions into two columns: left = i2c + font, right = oled + main
+  const leftFns = FLASH_FUNCTIONS.filter(f =>
+    f.name.startsWith("i2c_") || f.name === "font5x7"
+  );
+  const rightFns = FLASH_FUNCTIONS.filter(f =>
+    !f.name.startsWith("i2c_") && f.name !== "font5x7"
+  );
+  const maxRows = Math.max(leftFns.length, rightFns.length);
+
+  const fnStyle = (name) => ({
+    fontSize: 11,
+    fontFamily: "'IBM Plex Mono', monospace",
+    color: activeSet.has(name) ? "#00ff66" : "#3a5a3a",
+    borderLeft: activeSet.has(name)
+      ? `2px solid ${PHASE_COLORS[currentPhase] || "#586e75"}`
+      : "2px solid transparent",
+    paddingLeft: 6,
+    padding: "1px 6px",
+    transition: "all 0.2s",
+  });
+
+  return (
+    <div style={{
+      display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12,
+    }}>
+      {/* Flash panel */}
+      <div style={{
+        background: "#0a140a", border: "1px solid #1a2a1a", borderRadius: 6,
+        padding: "10px 14px",
+      }}>
+        <MemoryProgressBar used={flashUsed} total={FLASH_TOTAL} label={`FLASH (${FLASH_TOTAL.toLocaleString()}B)`} />
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 8px",
+        }}>
+          {Array.from({ length: maxRows }).map((_, i) => {
+            const lf = leftFns[i];
+            const rf = rightFns[i];
+            return [
+              lf ? (
+                <div key={`l-${lf.name}`} style={{ display: "flex", justifyContent: "space-between", ...fnStyle(lf.name) }}>
+                  <span>{lf.name}:</span>
+                  <span>{lf.approx ? "~" : ""}{lf.size}B</span>
+                </div>
+              ) : <div key={`l-empty-${i}`} />,
+              rf ? (
+                <div key={`r-${rf.name}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", ...fnStyle(rf.name) }}>
+                  <span>{rf.name}:</span>
+                  <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                    {rf.approx ? "~" : ""}{rf.size}B
+                  </span>
+                </div>
+              ) : <div key={`r-empty-${i}`} />,
+            ];
+          })}
+        </div>
+        {isText && (
+          <div style={{
+            fontSize: 10, color: "#586e75", fontStyle: "italic",
+            marginTop: 4, paddingLeft: 8,
+          }}>
+            font5x7 <span style={{ color: "#3a5a3a" }}>← pgm_read_byte()</span>
+          </div>
+        )}
+        <div style={{
+          fontSize: 10, color: "#586e75", marginTop: 8,
+          borderTop: "1px solid #1a2a1a", paddingTop: 6,
+        }}>
+          Total: ~{flashUsed}B ({((flashUsed / FLASH_TOTAL) * 100).toFixed(1)}%)
+          {" "} Remaining: {(FLASH_TOTAL - flashUsed).toLocaleString()}B
+        </div>
+      </div>
+
+      {/* RAM panel */}
+      <div style={{
+        background: "#0a140a", border: "1px solid #1a2a1a", borderRadius: 6,
+        padding: "10px 14px",
+      }}>
+        <MemoryProgressBar used={ramUsed} total={RAM_TOTAL} label={`RAM (${RAM_TOTAL}B)`} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          {RAM_ITEMS.map(item => (
+            <div key={item.name} style={{
+              display: "flex", justifyContent: "space-between",
+              fontSize: 11, color: "#c0d0c0", padding: "1px 6px",
+              fontFamily: "'IBM Plex Mono', monospace",
+            }}>
+              <span>{item.name}:</span>
+              <span style={{ color: "#586e75" }}>
+                {item.approx ? "~" : ""}{item.size}B
+                {item.note ? ` ${item.note}` : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div style={{
+          fontSize: 10, color: "#586e75", marginTop: 8,
+          borderTop: "1px solid #1a2a1a", paddingTop: 6,
+        }}>
+          Used: ~{ramUsed}B ({((ramUsed / RAM_TOTAL) * 100).toFixed(1)}%)
+          {" "} Remaining: ~{RAM_TOTAL - ramUsed}B
+        </div>
+        <div style={{
+          fontSize: 9, color: "#3a5a3a", marginTop: 6, fontStyle: "italic",
+        }}>
+          Display GDDRAM: 1024B (in SSD1306, not MCU)
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OLEDSimulator() {
   const steps = useMemo(() => generateOLEDSteps(), []);
 
@@ -221,6 +390,9 @@ export default function OLEDSimulator() {
           </div>
         </div>
       </div>
+
+      {/* Memory Budget Panel */}
+      <MemoryBudget currentPhase={step.phase} />
 
       {/* SSD1306 Register State Panel */}
       <div style={{

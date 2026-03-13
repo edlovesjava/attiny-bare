@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { generateOLEDSteps } from "./oled/oledSteps.js";
-import { createInitialState, applyStep } from "./oled/ssd1306State.js";
+import { createInitialState, applyStep, OLED_COLS, OLED_PAGES, OLED_COL_OFF } from "./oled/ssd1306State.js";
 
 const PHASE_COLORS = {
   INIT: "#6c71c4",
@@ -280,6 +280,122 @@ function MemoryBudget({ currentPhase }) {
   );
 }
 
+function PageMapGrid({ gddram, prevGddram, cursorCol, cursorPage, colOffset, onCellHover }) {
+  const cells = [];
+  for (let page = 0; page < OLED_PAGES; page++) {
+    for (let col = 0; col < OLED_COLS; col++) {
+      const internalCol = col + colOffset;
+      const addr = page * 128 + internalCol;
+      const value = gddram[addr];
+      const prevValue = prevGddram ? prevGddram[addr] : 0;
+      const changed = prevGddram !== null && value !== prevValue;
+      const isCursor = col === cursorCol && page === cursorPage;
+      const nonZero = value !== 0;
+
+      cells.push(
+        <div
+          key={`${page}-${col}`}
+          onMouseEnter={() => onCellHover && onCellHover({ col, page, value })}
+          onMouseLeave={() => onCellHover && onCellHover(null)}
+          style={{
+            gridRow: page + 2,
+            gridColumn: col + 2,
+            width: 24, height: 22,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 9, fontFamily: "'IBM Plex Mono', monospace",
+            background: nonZero ? "#0d1a0d" : "#1a2a1a",
+            color: changed ? "#00ff66" : nonZero ? "#586e75" : "#2a3a2a",
+            border: isCursor
+              ? "1px dashed #ffb800"
+              : changed
+                ? "1px solid #00ff66"
+                : "1px solid #0a140a",
+            boxShadow: changed ? "0 0 6px #00ff6644" : "none",
+            borderRadius: 2,
+            transition: "all 0.15s",
+            cursor: "default",
+          }}
+        >
+          {value.toString(16).toUpperCase().padStart(2, "0")}
+        </div>
+      );
+    }
+  }
+
+  // Column labels (every 10th)
+  const colLabels = [];
+  for (let col = 0; col < OLED_COLS; col += 10) {
+    colLabels.push(
+      <div
+        key={`cl-${col}`}
+        style={{
+          gridRow: 1, gridColumn: col + 2,
+          fontSize: 8, color: "#3a5a3a", textAlign: "center",
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}
+      >
+        {col}
+      </div>
+    );
+  }
+
+  // Page labels
+  const pageLabels = [];
+  for (let page = 0; page < OLED_PAGES; page++) {
+    pageLabels.push(
+      <div
+        key={`pl-${page}`}
+        style={{
+          gridRow: page + 2, gridColumn: 1,
+          fontSize: 9, color: "#586e75", fontWeight: 700,
+          display: "flex", alignItems: "center", justifyContent: "flex-end",
+          paddingRight: 4,
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}
+      >
+        P{page}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: "#0a140a", border: "1px solid #1a2a1a", borderRadius: 6,
+      padding: "10px 14px",
+    }}>
+      <div style={{
+        display: "flex", alignItems: "baseline", gap: 10, marginBottom: 8,
+      }}>
+        <div style={{
+          fontSize: 11, fontWeight: 700, color: "#00ff66", letterSpacing: 1,
+        }}>
+          {"GDDRAM \u2014 Display Memory (72\u00d740)"}
+        </div>
+        <div style={{ fontSize: 9, color: "#3a5a3a", fontStyle: "italic" }}>
+          +{colOffset} internal offset
+        </div>
+      </div>
+      <div style={{
+        overflowX: "auto", background: "#050a05",
+        border: "1px solid #1a2a1a", borderRadius: 6,
+        padding: 6,
+      }}>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: `28px repeat(${OLED_COLS}, 24px)`,
+          gridTemplateRows: `16px repeat(${OLED_PAGES}, 22px)`,
+          gap: 1,
+          width: "fit-content",
+        }}>
+          {colLabels}
+          {pageLabels}
+          {cells}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function OLEDSimulator() {
   const steps = useMemo(() => generateOLEDSteps(), []);
 
@@ -422,6 +538,16 @@ export default function OLEDSimulator() {
           </div>
         </div>
       </div>
+
+      {/* GDDRAM Page Map Grid */}
+      <PageMapGrid
+        gddram={ssd1306State.gddram}
+        prevGddram={currentStep > 0 ? prevState.gddram : null}
+        cursorCol={ssd1306State.cursor_col - OLED_COL_OFF}
+        cursorPage={ssd1306State.cursor_page}
+        colOffset={OLED_COL_OFF}
+        onCellHover={() => {}}
+      />
 
       {/* Step Controls */}
       <div style={{

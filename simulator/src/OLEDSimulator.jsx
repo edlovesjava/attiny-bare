@@ -280,6 +280,69 @@ function MemoryBudget({ currentPhase }) {
   );
 }
 
+function PixelPreview({ cell }) {
+  if (!cell) return null;
+  const { col, page, value, rect } = cell;
+  const hexStr = "0x" + value.toString(16).toUpperCase().padStart(2, "0");
+  const binStr = value.toString(2).padStart(8, "0");
+
+  // Position: above the cell by default, below if too close to top
+  const tooltipHeight = 200;
+  const showBelow = rect.top < tooltipHeight + 10;
+  const top = showBelow ? rect.bottom + 6 : rect.top - tooltipHeight - 6;
+  const left = rect.left + rect.width / 2;
+
+  return (
+    <div style={{
+      position: "fixed",
+      top,
+      left,
+      transform: "translateX(-50%)",
+      zIndex: 9999,
+      background: "rgba(10, 20, 10, 0.95)",
+      border: "1px solid #2a3a2a",
+      borderRadius: 6,
+      padding: "8px 10px",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+      fontFamily: "'IBM Plex Mono', monospace",
+      pointerEvents: "none",
+    }}>
+      {/* Header */}
+      <div style={{ fontSize: 10, color: "#00ff66", fontWeight: 700, marginBottom: 2 }}>
+        {hexStr} = {binStr}
+      </div>
+      <div style={{ fontSize: 9, color: "#586e75", marginBottom: 6 }}>
+        Col {col}, Page {page}
+      </div>
+      {/* 8-pixel column */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        {Array.from({ length: 8 }).map((_, bit) => {
+          const isSet = (value >> bit) & 1;
+          return (
+            <div key={bit} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{
+                width: 14, height: 14, borderRadius: 2,
+                background: isSet ? "#00ff66" : "#0d1a0d",
+                border: isSet ? "1px solid #00ff66" : "1px solid #2a3a2a",
+                boxShadow: isSet ? "0 0 4px #00ff6644" : "none",
+              }} />
+              <span style={{
+                fontSize: 9,
+                color: isSet ? "#00ff66" : "#3a5a3a",
+              }}>
+                b{bit}: {isSet}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ fontSize: 8, color: "#3a5a3a", fontStyle: "italic", marginTop: 4 }}>
+        bit 0 = top (LSB first)
+      </div>
+    </div>
+  );
+}
+
 function PageMapGrid({ gddram, prevGddram, cursorCol, cursorPage, colOffset, onCellHover }) {
   const cells = [];
   for (let page = 0; page < OLED_PAGES; page++) {
@@ -295,7 +358,12 @@ function PageMapGrid({ gddram, prevGddram, cursorCol, cursorPage, colOffset, onC
       cells.push(
         <div
           key={`${page}-${col}`}
-          onMouseEnter={() => onCellHover && onCellHover({ col, page, value })}
+          onMouseEnter={(e) => {
+            if (onCellHover) {
+              const r = e.currentTarget.getBoundingClientRect();
+              onCellHover({ col, page, value, rect: r });
+            }
+          }}
           onMouseLeave={() => onCellHover && onCellHover(null)}
           style={{
             gridRow: page + 2,
@@ -402,6 +470,7 @@ export default function OLEDSimulator() {
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(600);
+  const [hoveredCell, setHoveredCell] = useState(null);
 
   // Compute SSD1306 state by applying steps 0..currentStep
   const ssd1306State = useMemo(() => {
@@ -546,8 +615,9 @@ export default function OLEDSimulator() {
         cursorCol={ssd1306State.cursor_col - OLED_COL_OFF}
         cursorPage={ssd1306State.cursor_page}
         colOffset={OLED_COL_OFF}
-        onCellHover={() => {}}
+        onCellHover={setHoveredCell}
       />
+      {hoveredCell && <PixelPreview cell={hoveredCell} />}
 
       {/* Step Controls */}
       <div style={{
